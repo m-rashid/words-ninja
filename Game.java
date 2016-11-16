@@ -10,7 +10,7 @@ public class Game extends JFrame implements ActionListener {
     private static TileCollection tileCollectionInstance = new TileCollection();
     private static TileGUI[][] tile = new TileGUI[6][6];
     private static String current = "";
-    private static int score = 0;
+    private static int score, seconds = 0;
     private ArrayList<Integer> temp_score = new ArrayList<Integer>();
     private JTextField scoreView;
     private static ArrayList<String> neighbors = new ArrayList<String>();
@@ -26,7 +26,6 @@ public class Game extends JFrame implements ActionListener {
     private static JPanel centre = new JPanel();
     private Timer timer = null;
     private final JLabel label = new JLabel("0");
-    private int seconds = 0;
 
     public Game() {
 
@@ -118,50 +117,27 @@ public class Game extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String choice = e.getActionCommand();
 
-        for (int j = 0; j < 6; j++) {
-            for (int k = 0; k < 6; k++) {
-                allCoordinates.add(j + "" + k); //adding all the coordinates to the arraylist
-                //used for checking when no more words can be formed            
-            }
-        }
-
         if (!choice.equals("Done") && !choice.equals("Submit") && !choice.equals("Undo") && !choice.equals("Help") && !choice.equals("Quit") && !choice.equals("Shuffle")); //referring to the Tiles at the centre
         {
             for (int j = 0; j < 6; j++) {
                 for (int k = 0; k < 6; k++) {
 
                     if (tile[j][k] == e.getSource()) {
+                        System.out.println(j+""+k);
                         current += (tile[j][k].getTile().letter());
                         temp_score.add(tile[j][k].getTile().value());
                         coordinates.add(j + "" + k);
                         tile[j][k].setBackground(Color.blue);
-
-                        int randint = rand.nextInt(4);
-
                         tile[j][k].setEnabled(false); //a tile can only be selected once
-
+                        
                         if (neighbors.isEmpty()) //checking for the neighbouring tiles
                         {
-
-                            for (int row = j - 1; row <= j + 1; row++) {
-                                for (int col = k - 1; col <= k + 1; col++) {
-                                    if (!(j == row && k == col) && row >= 0 && col >= 0 && row < 6 && col < 6) {
-                                        neighbors.add("" + row + col);
-                                        System.out.println(neighbors);
-                                    }
-                                }
-                            }
+                            getNeighbors(j, k);
+                            
                         } else if (neighbors.contains("" + j + k)) {
                             neighbors.clear();
-                            for (int row = j - 1; row <= j + 1; row++) {
-                                for (int col = k - 1; col <= k + 1; col++) {
-                                    if (!(j == row && k == col) && row >= 0 && col >= 0 && row < 6 && col < 6) {
-                                        neighbors.add("" + row + col);
-                                        System.out.println(neighbors);
-                                    }
-                                }
-                            }
-
+                            getNeighbors(j, k);
+                        
                         } else //if Tile selected is not an adjacent tile
                         {
                             neighbors.clear();
@@ -184,17 +160,10 @@ public class Game extends JFrame implements ActionListener {
                             String SecondlastClicked = (coordinates.get(coordinates.size() - 1));
                             int secondX = Character.getNumericValue(SecondlastClicked.charAt(0));
                             int secondY = Character.getNumericValue(SecondlastClicked.charAt(1));
-
+                            neighbors.clear();
+                            getNeighbors(secondX, secondY);
                             //removing the neighbors of the illegally selected Tile
-                            for (int row = -1; row <= secondX + 1; row++) {
-                                for (int col = secondY - 1; col <= secondY + 1; col++) {
-                                    if (!(secondX == row && secondY == col) && row >= 0 && col >= 0 && row < 6 && col < 6) {
-                                        neighbors.add("" + row + col);
-
-                                    }
-                                }
-                            }
-
+                            //System.out.println(neighbors);
                         }
 
                     }
@@ -249,34 +218,17 @@ public class Game extends JFrame implements ActionListener {
 
                 }
 
-
                 if (current.length() == 1) //if only one letter is selected, and submitted
                 {
-                    JOptionPane.showMessageDialog(null, "Oops, formed word does not exists. Try again", "", JOptionPane.INFORMATION_MESSAGE);
-                    for (String m : coordinates) //iterating through the coordinates of selected tiles
-                    {
-                        int x = Character.getNumericValue(m.charAt(0));
-                        int y = Character.getNumericValue(m.charAt(1));
-
-                        tile[x][y].setEnabled(true); //setting the tiles back to their original forms
-                        tile[x][y].setBackground(null);
-
-                    }
+                    JOptionPane.showMessageDialog(null, "Please select a word with more than one letter", "", JOptionPane.INFORMATION_MESSAGE);
+                    restoreTiles();
                     break label;
                 }
 
                 if (current.length() == 0) //if only one letter is selected, and submitted
                 {
                     JOptionPane.showMessageDialog(null, "Please form a word and click Submit", "", JOptionPane.INFORMATION_MESSAGE);
-                    for (String m : coordinates) //iterating through the coordinates of selected tiles
-                    {
-                        int x = Character.getNumericValue(m.charAt(0));
-                        int y = Character.getNumericValue(m.charAt(1));
-
-                        tile[x][y].setEnabled(true); //setting the tiles back to their original forms
-                        tile[x][y].setBackground(null);
-
-                    }
+                    restoreTiles();
                     break label;
                 }
 
@@ -285,16 +237,7 @@ public class Game extends JFrame implements ActionListener {
                 if (n == 0) //if word does not exist
                 {
                     JOptionPane.showMessageDialog(null, "oops, formed word does not exist. Try again", "", JOptionPane.INFORMATION_MESSAGE);
-                    for (String m : coordinates) {
-
-                        int x = Character.getNumericValue(m.charAt(0));
-                        int y = Character.getNumericValue(m.charAt(1));
-
-                        tile[x][y].setEnabled(true);  //setting the tiles of the letters to unselected
-                        tile[x][y].setBackground(null);
-                    }
-                    neighbors.clear();
-
+                    restoreTiles();
                     break label;
 
                 }
@@ -316,15 +259,6 @@ public class Game extends JFrame implements ActionListener {
 
         if (choice.equals("Quit")) //when the user chooses to stop playing the game
         {
-
-            if (score == 0) {
-                JOptionPane.showMessageDialog(null, "Your score is 0. Take this seriously, it's fun.", "", JOptionPane.INFORMATION_MESSAGE);
-                System.exit(0);
-            }
-            if (score <= 5) {
-                JOptionPane.showMessageDialog(null, "You scored " + score + ". You can do better :)", "", JOptionPane.INFORMATION_MESSAGE);
-                System.exit(0);
-            }
 
             if (score <= 10) {
                 JOptionPane.showMessageDialog(null, "You scored " + score + ". You can do better :)", "", JOptionPane.INFORMATION_MESSAGE);
@@ -365,14 +299,7 @@ public class Game extends JFrame implements ActionListener {
             int secondX = Character.getNumericValue(SecondlastClicked.charAt(0));
             int secondY = Character.getNumericValue(SecondlastClicked.charAt(1));
 
-            for (int row = -1; row <= secondX + 1; row++) {
-                for (int col = secondY - 1; col <= secondY + 1; col++) {
-                    if (!(secondX == row && secondY == col) && row >= 0 && col >= 0 && row < 6 && col < 6) {
-                        neighbors.add("" + row + col);
-
-                    }
-                }
-            }
+            getNeighbors(secondX, secondY);
 
         }
 
@@ -424,5 +351,29 @@ public class Game extends JFrame implements ActionListener {
             centre.setVisible(true);
         }
 
+    }
+    
+    public void getNeighbors(int j, int k){
+        for (int row = j - 1; row <= j + 1; row++) {
+            for (int col = k - 1; col <= k + 1; col++) {
+                if (!(j == row && k == col) && row >= 0 && col >= 0 && row < 6 && col < 6) {
+                    neighbors.add("" + row + col);
+                    //System.out.println(neighbors);
+                }
+            }
+        }
+    }
+    
+    public void restoreTiles() {
+        for (String m : coordinates) //iterating through the coordinates of selected tiles
+        {
+            int x = Character.getNumericValue(m.charAt(0));
+            int y = Character.getNumericValue(m.charAt(1));
+
+            tile[x][y].setEnabled(true); //setting the tiles back to their original forms
+            tile[x][y].setBackground(null);
+
+        }
+        neighbors.clear();
     }
 }
