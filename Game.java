@@ -205,11 +205,11 @@ public class Game extends JFrame implements ActionListener {
 
         if (choice.equals("Submit")) //when submit button is clicked to submit the formed word
         {
-
+            Random randint = new Random(); //to get a random colour
+            int random = randint.nextInt(8);
             label:
             try {
 
-                TileCollection anothertileCollectionInstance = new TileCollection();
                 String[] dict = FileToArray.read("EnglishWords.txt"); //iterating through the dictionary to check if the formed word exists
                 int n = 0;
                 for (String u : dict) {
@@ -217,38 +217,38 @@ public class Game extends JFrame implements ActionListener {
                     if (current.equalsIgnoreCase(u)) {
 
                         for (int k = 0; k < temp_score.size(); k++) {
-
                             score += temp_score.get(k);
-                            /* for(String m : coordinates)
-                                  {
-                                         
-                                         int x = Character.getNumericValue(m.charAt(0));  //getting the x-coordinate of the tile
-                                         int y = Character.getNumericValue(m.charAt(1));  //getting the y-coordinate of the tile
-                                 
-                                         tile[x][y].setBackground(colors[temp]);  //set the colour of the formed word
-                       
-                                   
-                                 }*/
+                        }
+                        for (String m : coordinates) {
+
+                            int a = Character.getNumericValue(m.charAt(0));
+                            int b = Character.getNumericValue(m.charAt(1));
+                            tile[a][b].setBackground(colors[random]);  //set the colour of the formed word
                         }
                         n++;
-
+                        
+                        /*
                         //replacing the tiles with new ones
                         for (String m : coordinates) {
 
                             int a = Character.getNumericValue(m.charAt(0));
                             int b = Character.getNumericValue(m.charAt(1));
-
+                            System.out.println(a+""+b);
                             centre.remove(tile[a][b]);
 
                             tile[a][b] = new TileGUI(tileCollectionInstance.removeOne());
                             centre.add(tile[a][b]);
                             tile[a][b].addActionListener(this);
+                            tile[a][b].setActionCommand(a + "," + b);
 
                         }
+                        */
+                        
 
                     }
 
                 }
+
 
                 if (current.length() == 1) //if only one letter is selected, and submitted
                 {
